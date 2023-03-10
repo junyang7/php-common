@@ -5,6 +5,12 @@ namespace Junyang7\PhpCommon;
 class _Cmd
 {
 
+    /**
+     * 执行命令
+     * @param $command string 命令
+     * @return string
+     * @throws \Exception
+     */
     public static function exe($command)
     {
 
