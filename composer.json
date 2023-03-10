@@ -1,0 +1,13 @@
+{
+  "name": "junyang7/php-common",
+  "autoload": {
+    "psr-4": {
+      "Junyang7\\PhpCommon\\": "src"
+    }
+  },
+  "require": {
+    "box/spout": "^3.3",
+    "phpmailer/phpmailer": "^6.7",
+    "ext-pdo": "*"
+  }
+}
