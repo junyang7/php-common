@@ -23,14 +23,14 @@ class _Directory
      * 如果目录创建失败，则抛出异常
      * @param $path string 目录路径
      * @return void
-     * @throws _Exception
+     * @throws \Exception
      */
     public static function create($path)
     {
 
         if (!self::exists($path)) {
             if (!mkdir($path, 0777, true)) {
-                throw new _Exception("目录创建失败");
+                throw new \Exception("目录创建失败");
             }
         }
 
