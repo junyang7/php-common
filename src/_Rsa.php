@@ -47,7 +47,7 @@ class _Rsa
      * @return array
      * @throws \Exception
      */
-    public static function generate($configure = ["digest_alg" => "SHA512", "private_key_bits" => 4096,])
+    public static function get($configure = ["digest_alg" => "SHA512", "private_key_bits" => 4096,])
     {
 
         $key = openssl_pkey_new($configure);
