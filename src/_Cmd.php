@@ -11,7 +11,7 @@ class _Cmd
      * @return string
      * @throws \Exception
      */
-    public static function exe($command)
+    public static function do($command)
     {
 
         if (false === ($proc = proc_open($command, [["pipe", "r",], ["pipe", "w",], ["pipe", "w",],], $pipe_list))) {
