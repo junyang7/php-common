@@ -6,9 +6,9 @@ class _Dao
 {
 
     private static $pdo_list = [];
+    private $tx = null;
     private $uk = "";
     private $prepared = null;
-    private $retry = 3;
     private $machine = [];
     private $master = false;
     private $cluster = [];
@@ -27,63 +27,49 @@ class _Dao
     private $field = "";
     private $index = "";
 
-
-    private function do($transaction = false)
+    private function do($instance)
     {
 
-        while ($this->retry > 0) {
-            $this->retry--;
-            try {
-                $this->pdoDo($transaction);
-                return;
-            } catch (\PDOException $exception) {
-                if (!in_array($exception->errorInfo[1], [2006, 2013,])) {
-                    throw $exception;
-                }
-                unset(self::$pdo_list[$this->uk]);
-                self::$pdo_list[$this->uk] = null;
-                continue;
+        try {
+            $this->pdoDo($instance);
+            return;
+        } catch (\PDOException $exception) {
+            if (!in_array($exception->errorInfo[1], [2006, 2013,])) {
+                throw $exception;
             }
+            unset(self::$pdo_list[$this->uk]);
+            self::$pdo_list[$this->uk] = null;
+            $this->pdoDo($instance);
         }
 
     }
 
-    private function pdoDo($transaction)
+    private function pdoDo($instance)
     {
 
-        if ($transaction) {
-            $this->getPdo()->{$this->sql}();
-            return;
-        }
-
-        $this->prepared = $this->getPdo()->prepare($this->sql);
+        $instance->prepared = $instance->getPdo()->prepare($this->sql);
         foreach ($this->parameter as $index => $value) {
-            $this->prepared->bindValue($index + 1, $value);
+            $instance->prepared->bindValue($index + 1, $value);
         }
-        $this->prepared->execute();
+        $instance->prepared->execute();
 
     }
 
     private function getPdo()
     {
 
-        if (empty($this->machine)) {
-
-            if (empty($this->cluster)) {
-                throw new \Exception("请配置库链接信息");
-            }
-
-            $cluster = $this->cluster["cluster"][$this->database_index];
-            $master = $cluster["master"];
-            $slaver = $cluster["slaver"];
-            $this->machine = $this->master ? $master["machine"][0] : ($slaver["machine"][$slaver["count"] > 1 ? rand(0, $slaver["count"] - 1) : 0]);
-
-        }
-
         if (empty($this->uk)) {
+            if (empty($this->machine)) {
+                if (empty($this->cluster)) {
+                    throw new \Exception("请配置库链接信息");
+                }
+                $cluster = $this->cluster["cluster"][$this->database_index];
+                $master = $cluster["master"];
+                $slaver = $cluster["slaver"];
+                $this->machine = $this->master ? $master["machine"][0] : ($slaver["machine"][$slaver["count"] > 1 ? rand(0, $slaver["count"] - 1) : 0]);
+            }
             $this->uk = md5(serialize($this->machine));
         }
-
         if (!isset(self::$pdo_list[$this->uk])) {
             self::$pdo_list[$this->uk] = new \PDO(
                 sprintf(
@@ -105,7 +91,6 @@ class _Dao
                 ]
             );
         }
-
         return self::$pdo_list[$this->uk];
 
     }
@@ -126,7 +111,9 @@ class _Dao
 
     private function getIndex()
     {
+
         return empty($this->index) ? "" : " FORCE INDEX (" . $this->index . ")";
+
     }
 
     private function getWhere()
@@ -290,7 +277,7 @@ class _Dao
     {
 
         $this->fetch = $fetch;
-        return;
+        return $this;
 
     }
 
@@ -298,15 +285,16 @@ class _Dao
     {
 
         $this->fetch_style = $fetch_style;
-        return;
+        return $this;
 
     }
 
     public function query()
     {
 
-        $this->do();
-        return $this->prepared->{$this->fetch}($this->fetch_style);
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return $instance->prepared->{$this->fetch}($this->fetch_style);
 
     }
 
@@ -314,11 +302,12 @@ class _Dao
     {
 
         $this->master = true;
-        $this->do();
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
         if ($add) {
-            return (int)self::$pdo_list[$this->uk]->lastInsertId();
+            return (int)$instance->getPdo()->lastInsertId();
         }
-        return (int)$this->prepared->rowCount();
+        return (int)$instance->prepared->rowCount();
 
     }
 
@@ -342,6 +331,7 @@ class _Dao
     {
 
         $this->table = $table;
+        return $this;
 
     }
 
@@ -398,8 +388,9 @@ class _Dao
 
         $this->master = true;
         $this->buildAdd();
-        $this->do();
-        return (int)self::$pdo_list[$this->uk]->lastInsertId();
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return (int)$instance->getPdo()->lastInsertId();
 
     }
 
@@ -408,8 +399,9 @@ class _Dao
 
         $this->master = true;
         $this->buildDel();
-        $this->do();
-        return (int)$this->prepared->rowCount();
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return (int)$instance->prepared->rowCount();
 
     }
 
@@ -418,8 +410,9 @@ class _Dao
 
         $this->master = true;
         $this->buildSet();
-        $this->do();
-        return (int)$this->prepared->rowCount();
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return (int)$instance->prepared->rowCount();
 
     }
 
@@ -427,8 +420,9 @@ class _Dao
     {
 
         $this->buildGetList();
-        $this->do();
-        return $this->prepared->fetchAll($this->fetch_style) ?? [];
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return $instance->prepared->fetchAll($this->fetch_style) ?? [];
 
     }
 
@@ -437,8 +431,9 @@ class _Dao
 
         $this->limit = 1;
         $this->buildGetList();
-        $this->do();
-        return $this->prepared->fetch($this->fetch_style) ?? [];
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return $instance->prepared->fetch($this->fetch_style) ?? [];
 
     }
 
@@ -446,8 +441,9 @@ class _Dao
     {
 
         $this->buildCount();
-        $this->do();
-        return (int)$this->prepared->fetch()["c"] ?? 0;
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return (int)$instance->prepared->fetch()["c"] ?? 0;
 
     }
 
@@ -455,8 +451,17 @@ class _Dao
     {
 
         $this->buildExists();
-        $this->do();
-        return $this->prepared->rowCount() > 0;
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return $instance->prepared->rowCount() > 0;
+
+    }
+
+    public function tx($tx)
+    {
+
+        $this->tx = $tx;
+        return $this;
 
     }
 
@@ -464,8 +469,8 @@ class _Dao
     {
 
         $this->master = true;
-        $this->sql = "beginTransaction";
-        $this->do(true);
+        $this->getPdo()->beginTransaction();
+        $this->tx = $this;
         return $this;
 
     }
@@ -473,9 +478,7 @@ class _Dao
     public function commit()
     {
 
-        $this->master = true;
-        $this->sql = "commit";
-        $this->do(true);
+        $this->tx->getPdo()->commit();
         return $this;
 
     }
@@ -483,9 +486,7 @@ class _Dao
     public function rollBack()
     {
 
-        $this->master = true;
-        $this->sql = "rollBack";
-        $this->do(true);
+        $this->tx->getPdo()->rollBack();
         return $this;
 
     }
