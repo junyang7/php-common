@@ -24,29 +24,33 @@ class _Dao
     private $field = "";
     private $index = "";
 
-    private function do()
+    private function do($transaction = false)
     {
 
-        try {
-            $this->pdoDo();
-            return;
-        } catch (\PDOException $exception) {
-            if (!in_array($exception->errorInfo[1], [2006, 2013,])) {
-                throw $exception;
-            }
-            unset(self::$pdo_list[$this->uk]);
-            self::$pdo_list[$this->uk] = null;
-        }
-
-        $this->retry--;
         while ($this->retry > 0) {
-            $this->pdoDo();
+            $this->retry--;
+            try {
+                $this->pdoDo($transaction);
+                return;
+            } catch (\PDOException $exception) {
+                if (!in_array($exception->errorInfo[1], [2006, 2013,])) {
+                    throw $exception;
+                }
+                unset(self::$pdo_list[$this->uk]);
+                self::$pdo_list[$this->uk] = null;
+                continue;
+            }
         }
 
     }
 
-    private function pdoDo()
+    private function pdoDo($transaction)
     {
+
+        if ($transaction) {
+            $this->getPdo()->{$this->sql}();
+            return;
+        }
 
         $this->prepared = $this->getPdo()->prepare($this->sql);
         foreach ($this->parameter as $index => $value) {
@@ -412,6 +416,33 @@ class _Dao
         $this->buildExists();
         $this->do();
         return $this->prepared->rowCount() > 0;
+
+    }
+
+    public function beginTransaction()
+    {
+
+        $this->sql = "beginTransaction";
+        $this->do(true);
+        return $this;
+
+    }
+
+    public function commit()
+    {
+
+        $this->sql = "commit";
+        $this->do(true);
+        return $this;
+
+    }
+
+    public function rollBack()
+    {
+
+        $this->sql = "rollBack";
+        $this->do(true);
+        return $this;
 
     }
 
