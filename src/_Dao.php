@@ -12,6 +12,17 @@ class _Dao
     private $machine = [];
     private $sql = "";
     private $parameter = [];
+    private $fetch = "fetch";
+    private $fetch_style = \PDO::FETCH_ASSOC;
+    private $row = [];
+    private $table = "";
+    private $where = "";
+    private $limit = 0;
+    private $offset = 0;
+    private $order = "";
+    private $group = "";
+    private $field = "";
+    private $index = "";
 
     private function do()
     {
@@ -82,6 +93,134 @@ class _Dao
 
     }
 
+    private function getField()
+    {
+
+        return empty($this->field) ? "*" : $this->field;
+
+    }
+
+    private function getTable()
+    {
+
+        return $this->table;
+
+    }
+
+    private function getIndex()
+    {
+        return empty($this->index) ? "" : " FORCE INDEX (" . $this->index . ")";
+    }
+
+    private function getWhere()
+    {
+
+        return empty($this->where) ? "" : " WHERE " . $this->where;
+
+    }
+
+    private function getLimit()
+    {
+
+        return $this->limit > 0 ? sprintf(" LIMIT %s,%s", $this->offset, $this->limit) : "";
+
+    }
+
+    private function getOrder()
+    {
+
+        return empty($this->order) ? "" : " ORDER BY " . $this->order;
+
+    }
+
+    private function getGroup()
+    {
+
+        return empty($this->group) ? "" : " GROUP BY " . $this->group;
+
+    }
+
+    private function buildAdd()
+    {
+
+        $table = $this->getTable();
+        $field = implode(",", array_keys($this->row));
+        $template = implode(",", array_fill(0, count($this->row), "?"));
+        $this->sql = sprintf("INSERT INTO %s (%s) VALUES (%s)", $table, $field, $template);
+        $this->parameter = array_values($this->row);
+        return $this;
+
+    }
+
+    private function buildDel()
+    {
+
+        $table = $this->getTable();
+        $where = $this->getWhere();
+        $this->sql = sprintf("DELETE FROM %s%s", $table, $where);
+        return $this;
+
+    }
+
+    private function buildSet()
+    {
+
+        $table = $this->getTable();
+        $template = implode(",", array_map(function ($v) {
+            return $v . " = ?";
+        }, array_keys($this->row)));
+        $where = $this->getWhere();
+        $this->sql = sprintf("UPDATE %s SET %s%s", $table, $template, $where);
+        array_unshift($this->parameter, ...array_values($this->row));
+        return $this;
+
+    }
+
+    private function buildGetList()
+    {
+
+        $field = $this->getField();
+        $table = $this->getTable();
+        $this->sql = sprintf("SELECT %s FROM %s", $field, $table);
+        if (!empty($index = $this->getIndex())) {
+            $this->sql .= $index;
+        }
+        if (!empty($where = $this->getWhere())) {
+            $this->sql .= $where;
+        }
+        if (!empty($group = $this->getGroup())) {
+            $this->sql .= $group;
+        }
+        if (!empty($order = $this->getOrder())) {
+            $this->sql .= $order;
+        }
+        if (!empty($limit = $this->getLimit())) {
+            $this->sql .= $limit;
+        }
+        return $this;
+
+    }
+
+    private function buildCount()
+    {
+
+        $table = $this->getTable();
+        $where = $this->getWhere();
+        $this->sql = sprintf("SELECT COUNT(*) AS c FROM %s%s", $table, $where);
+        return $this;
+
+    }
+
+    private function buildExists()
+    {
+
+        $table = $this->getTable();
+        $where = $this->getWhere();
+        $this->sql = sprintf("SELECT 1 FROM %s%s LIMIT 1", $table, $where);
+        return $this;
+
+    }
+
     public function machine($machine)
     {
 
@@ -106,11 +245,27 @@ class _Dao
 
     }
 
-    public function query($fetch = "fetch", $option = \PDO::FETCH_ASSOC)
+    public function fetch($fetch)
+    {
+
+        $this->fetch = $fetch;
+        return;
+
+    }
+
+    public function fetchStyle($fetch_style)
+    {
+
+        $this->fetch_style = $fetch_style;
+        return;
+
+    }
+
+    public function query()
     {
 
         $this->do();
-        return $this->prepared->$fetch($option);
+        return $this->prepared->{$this->fetch}($this->fetch_style);
 
     }
 
@@ -122,6 +277,141 @@ class _Dao
             return (int)self::$pdo_list[$this->uk]->lastInsertId();
         }
         return (int)$this->prepared->rowCount();
+
+    }
+
+    public function row($row)
+    {
+
+        $this->row = $row;
+        return $this;
+
+    }
+
+    public function field($field)
+    {
+
+        $this->field = $field;
+        return $this;
+
+    }
+
+    public function table($table)
+    {
+
+        $this->table = $table;
+
+    }
+
+    public function index($index)
+    {
+
+        $this->index = $index;
+        return $this;
+
+    }
+
+    public function where($where)
+    {
+
+        $this->where = $where;
+        return $this;
+
+    }
+
+    public function limit($limit)
+    {
+
+        $this->limit = $limit;
+        return $this;
+
+    }
+
+    public function offset($offset)
+    {
+
+        $this->offset = $offset;
+        return $this;
+
+    }
+
+    public function order($order)
+    {
+
+        $this->order = $order;
+        return $this;
+
+    }
+
+    public function group($group)
+    {
+
+        $this->group = $group;
+        return $this;
+
+    }
+
+    public function add()
+    {
+
+        $this->buildAdd();
+        $this->do();
+        return (int)self::$pdo_list[$this->uk]->lastInsertId();
+
+    }
+
+    public function del()
+    {
+
+        $this->buildDel();
+        $this->do();
+        return (int)$this->prepared->rowCount();
+
+    }
+
+    public function set()
+    {
+
+        $this->buildSet();
+        $this->do();
+        return (int)$this->prepared->rowCount();
+
+    }
+
+    public function getList()
+    {
+
+        $this->buildGetList();
+        $this->do();
+        return $this->prepared->fetchAll($this->fetch_style) ?? [];
+
+    }
+
+    public function get()
+    {
+
+        $this->limit = 1;
+        $this->buildGetList();
+        $this->do();
+        return $this->prepared->fetch($this->fetch_style) ?? [];
+
+    }
+
+    public function count()
+    {
+
+        $this->buildCount();
+        $this->do();
+        return (int)$this->prepared->fetch()["c"] ?? 0;
+
+    }
+
+    public function exists()
+    {
+
+        $this->buildExists();
+        $this->do();
+        return $this->prepared->rowCount() > 0;
 
     }
 
