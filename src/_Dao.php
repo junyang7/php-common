@@ -19,6 +19,8 @@ class _Dao
     private $fetch_style = \PDO::FETCH_ASSOC;
     private $row = [];
     private $table = "";
+    private $table_prefix = "";
+    private $table_suffix = "";
     private $where = "";
     private $limit = 0;
     private $offset = 0;
@@ -105,7 +107,7 @@ class _Dao
     private function getTable()
     {
 
-        return $this->table;
+        return $this->table_prefix . $this->table . $this->table_suffix;
 
     }
 
@@ -331,6 +333,22 @@ class _Dao
     {
 
         $this->table = $table;
+        return $this;
+
+    }
+
+    public function tablePrefix($table_prefix)
+    {
+
+        $this->table_prefix = $table_prefix;
+        return $this;
+
+    }
+
+    public function tableSuffix($table_suffix)
+    {
+
+        $this->table_suffix = $table_suffix;
         return $this;
 
     }
