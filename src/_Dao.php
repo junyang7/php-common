@@ -10,6 +10,9 @@ class _Dao
     private $prepared = null;
     private $retry = 3;
     private $machine = [];
+    private $master = false;
+    private $cluster = [];
+    private $database_index = 0;
     private $sql = "";
     private $parameter = [];
     private $fetch = "fetch";
@@ -23,6 +26,7 @@ class _Dao
     private $group = "";
     private $field = "";
     private $index = "";
+
 
     private function do($transaction = false)
     {
@@ -64,7 +68,16 @@ class _Dao
     {
 
         if (empty($this->machine)) {
-            throw new \Exception("请配置库链接信息");
+
+            if (empty($this->cluster)) {
+                throw new \Exception("请配置库链接信息");
+            }
+
+            $cluster = $this->cluster["cluster"][$this->database_index];
+            $master = $cluster["master"];
+            $slaver = $cluster["slaver"];
+            $this->machine = $this->master ? $master["machine"][0] : ($slaver["machine"][$slaver["count"] > 1 ? rand(0, $slaver["count"] - 1) : 0]);
+
         }
 
         if (empty($this->uk)) {
@@ -233,6 +246,30 @@ class _Dao
 
     }
 
+    public function master($master)
+    {
+
+        $this->master = $master;
+        return $this;
+
+    }
+
+    public function cluster($cluster)
+    {
+
+        $this->cluster = $cluster;
+        return $this;
+
+    }
+
+    public function databaseIndex($database_index)
+    {
+
+        $this->database_index = $database_index;
+        return $this;
+
+    }
+
     public function sql($sql)
     {
 
@@ -276,6 +313,7 @@ class _Dao
     public function execute($add)
     {
 
+        $this->master = true;
         $this->do();
         if ($add) {
             return (int)self::$pdo_list[$this->uk]->lastInsertId();
@@ -358,6 +396,7 @@ class _Dao
     public function add()
     {
 
+        $this->master = true;
         $this->buildAdd();
         $this->do();
         return (int)self::$pdo_list[$this->uk]->lastInsertId();
@@ -367,6 +406,7 @@ class _Dao
     public function del()
     {
 
+        $this->master = true;
         $this->buildDel();
         $this->do();
         return (int)$this->prepared->rowCount();
@@ -376,6 +416,7 @@ class _Dao
     public function set()
     {
 
+        $this->master = true;
         $this->buildSet();
         $this->do();
         return (int)$this->prepared->rowCount();
@@ -422,6 +463,7 @@ class _Dao
     public function beginTransaction()
     {
 
+        $this->master = true;
         $this->sql = "beginTransaction";
         $this->do(true);
         return $this;
@@ -431,6 +473,7 @@ class _Dao
     public function commit()
     {
 
+        $this->master = true;
         $this->sql = "commit";
         $this->do(true);
         return $this;
@@ -440,6 +483,7 @@ class _Dao
     public function rollBack()
     {
 
+        $this->master = true;
         $this->sql = "rollBack";
         $this->do(true);
         return $this;
@@ -447,3 +491,80 @@ class _Dao
     }
 
 }
+
+$cluster = [
+    "count" => 1,
+    "cluster" => [
+        "0" => [
+            "master" => [
+                "count" => 1,
+                "machine" => [
+                    [
+                        "driver" => "mysql",
+                        "host" => "127.0.0.1",
+                        "port" => "3306",
+                        "database" => "test",
+                        "username" => "root",
+                        "password" => "",
+                        "charset" => "utf8mb4",
+                        "collation" => "utf8mb4_general_ci",
+                        "custom" => "master-0",
+                    ],
+                ],
+            ],
+            "slaver" => [
+                "count" => 2,
+                "machine" => [
+                    [
+                        "driver" => "mysql",
+                        "host" => "127.0.0.1",
+                        "port" => "3306",
+                        "database" => "test",
+                        "username" => "root",
+                        "password" => "",
+                        "charset" => "utf8mb4",
+                        "collation" => "utf8mb4_general_ci",
+                        "custom" => "slaver-0",
+                    ],
+                    [
+                        "driver" => "mysql",
+                        "host" => "127.0.0.1",
+                        "port" => "3306",
+                        "database" => "test",
+                        "username" => "root",
+                        "password" => "",
+                        "charset" => "utf8mb4",
+                        "collation" => "utf8mb4_general_ci",
+                        "custom" => "slaver-1",
+                    ],
+                ],
+            ],
+        ],
+    ],
+];
+$machine = [
+    "driver" => "mysql",
+    "host" => "127.0.0.1",
+    "port" => "3306",
+    "database" => "test",
+    "username" => "root",
+    "password" => "",
+    "charset" => "utf8mb4",
+    "collation" => "utf8mb4_general_ci",
+    "custom" => "master-0",
+];
+$dao = new _Dao();
+//$dao->machine($machine);
+$dao->cluster($cluster);
+$dao->table("test");
+//$dao->row(
+//    [
+//        "name" => "张三",
+//        "age" => 30
+//    ]
+//);
+//$res = $dao->add();
+//var_dump($res);
+$res = $dao->getList();
+var_dump($res);
+
