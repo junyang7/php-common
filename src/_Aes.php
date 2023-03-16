@@ -47,4 +47,19 @@ class _Aes
 
     }
 
+    /**
+     * 生成秘钥
+     * @return array
+     */
+    public static function get()
+    {
+
+        $res = [];
+        $res["k32"] = _RandomString::get(32, "0123456789qwertyuiopasdfghjklzxcvbnm");
+        $res["i16"] = _RandomString::get(16, "0123456789qwertyuiopasdfghjklzxcvbnm");
+
+        return $res;
+
+    }
+
 }
