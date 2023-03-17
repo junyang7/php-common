@@ -19,15 +19,7 @@ class _Url
         }
 
         if (!empty($parameter)) {
-            $res .= "?";
-            $index = 0;
-            foreach ($parameter as $k => $v) {
-                if ($index > 0) {
-                    $res .= "&";
-                }
-                $res .= $k . "=" . $v;
-                $index++;
-            }
+            $res .= "?" . http_build_query($parameter);
         }
 
         return $res;
