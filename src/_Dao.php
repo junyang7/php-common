@@ -18,6 +18,7 @@ class _Dao
     private $fetch = "fetch";
     private $fetch_style = \PDO::FETCH_ASSOC;
     private $row = [];
+    private $row_list = [];
     private $table = "";
     private $table_prefix = "";
     private $table_suffix = "";
@@ -154,6 +155,20 @@ class _Dao
         $template = implode(",", array_fill(0, count($this->row), "?"));
         $this->sql = sprintf("INSERT INTO %s (%s) VALUES (%s)", $table, $field, $template);
         $this->parameter = array_values($this->row);
+        return $this;
+
+    }
+
+    private function buildAddList()
+    {
+
+        $table = $this->getTable();
+        $field = implode(",", array_keys($this->row_list[0]));
+        $template = implode(",", array_fill(0, count($this->row_list), "(" . implode(",", array_fill(0, count($this->row_list[0]), "?")) . ")"));
+        $this->sql = sprintf("INSERT INTO %s (%s) VALUES %s", $table, $field, $template);
+        array_walk_recursive($this->row_list, function ($value) {
+            $this->parameter[] = $value;
+        });
         return $this;
 
     }
@@ -321,6 +336,14 @@ class _Dao
 
     }
 
+    public function rowList($row_list)
+    {
+
+        $this->row_list = $row_list;
+        return $this;
+
+    }
+
     public function field($field)
     {
 
@@ -406,6 +429,17 @@ class _Dao
 
         $this->master = true;
         $this->buildAdd();
+        $instance = $this->tx ?? $this;
+        $this->do($instance);
+        return (int)$instance->getPdo()->lastInsertId();
+
+    }
+
+    public function addList()
+    {
+
+        $this->master = true;
+        $this->buildAddList();
         $instance = $this->tx ?? $this;
         $this->do($instance);
         return (int)$instance->getPdo()->lastInsertId();
