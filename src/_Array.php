@@ -24,16 +24,16 @@ class _Array
     }
 
     /**
-     * 递归的合并（覆盖）两个多维数组
-     * @param $a array 多维数组
-     * @param $b array 多维数组，此数组将会合并到$a上
-     * @return void
+     * 递归的合并数组
+     * @param $a array 数组1
+     * @param $b array 数组2（会合并到数组1上）
+     * @return array
      */
-    public static function merge(&$a, $b)
+    public static function merge($a, $b)
     {
 
         if (!is_array($a) || !is_array($b)) {
-            return;
+            return [];
         }
 
         foreach ($b as $k => $v) {
@@ -41,8 +41,10 @@ class _Array
                 $a[$k] = $v;
                 continue;
             }
-            self::merge($a[$k], $v);
+            $a[$k] = self::merge($a[$k], $v);
         }
+
+        return $a;
 
     }
 
