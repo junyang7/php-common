@@ -18,12 +18,6 @@ class _XlsxReader
 
     }
 
-    /**
-     * 打开
-     * @param $file string 路径
-     * @return void
-     * @throws \Box\Spout\Common\Exception\IOException
-     */
     public function open($file)
     {
 
@@ -32,12 +26,6 @@ class _XlsxReader
 
     }
 
-    /**
-     * 设置当前操作的sheet
-     * @param $index int 索引
-     * @return void
-     * @throws \Box\Spout\Reader\Exception\ReaderNotOpenedException
-     */
     public function setCurrentSheetByIndex($index = 0)
     {
 
@@ -50,12 +38,6 @@ class _XlsxReader
 
     }
 
-    /**
-     * 设置当前操作的sheet
-     * @param $name string 名称
-     * @return void
-     * @throws \Box\Spout\Reader\Exception\ReaderNotOpenedException
-     */
     public function setCurrentSheetByName($name = "Sheet1")
     {
 
@@ -68,10 +50,6 @@ class _XlsxReader
 
     }
 
-    /**
-     * 读取
-     * @return \Generator
-     */
     public function read()
     {
 
@@ -81,10 +59,6 @@ class _XlsxReader
 
     }
 
-    /**
-     * 关闭
-     * @return void
-     */
     public function close()
     {
 

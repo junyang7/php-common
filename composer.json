@@ -1,4 +1,11 @@
 {
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://composer.ziji.fun"
+    }
+  ],
+  "minimum-stability": "dev",
   "name": "junyang7/php-common",
   "autoload": {
     "psr-4": {
@@ -6,8 +13,14 @@
     }
   },
   "require": {
-    "box/spout": "^3.3",
-    "phpmailer/phpmailer": "^6.7",
-    "ext-pdo": "*"
+    "php": ">=7.2",
+    "box/spout": "dev-master",
+    "phpmailer/phpmailer": "dev-master",
+    "ext-openssl": "*",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-redis": "*",
+    "ext-zlib": "*"
   }
 }

@@ -1,5 +1,4 @@
 {
-  "name": "junyang7/php-common",
   "autoload": {
     "psr-4": {
       "Junyang7\\PhpCommon\\": "../src",

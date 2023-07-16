@@ -17,12 +17,6 @@ class _XlsxWriter
 
     }
 
-    /**
-     * 打开
-     * @param $file string 路径
-     * @return void
-     * @throws \Box\Spout\Common\Exception\IOException
-     */
     public function open($file)
     {
 
@@ -30,13 +24,6 @@ class _XlsxWriter
 
     }
 
-    /**
-     * 设置当前操作的sheet
-     * @param $index int 索引
-     * @return void
-     * @throws \Box\Spout\Writer\Exception\SheetNotFoundException
-     * @throws \Box\Spout\Writer\Exception\WriterNotOpenedException
-     */
     public function setCurrentSheetByIndex($index = 0)
     {
 
@@ -50,13 +37,6 @@ class _XlsxWriter
 
     }
 
-    /**
-     * 设置当前操作的sheet
-     * @param $name string 名称
-     * @return void
-     * @throws \Box\Spout\Writer\Exception\SheetNotFoundException
-     * @throws \Box\Spout\Writer\Exception\WriterNotOpenedException
-     */
     public function setCurrentSheetByName($name = "Sheet1")
     {
 
@@ -70,13 +50,6 @@ class _XlsxWriter
 
     }
 
-    /**
-     * 写入
-     * @param $row array 行数据
-     * @return void
-     * @throws \Box\Spout\Common\Exception\IOException
-     * @throws \Box\Spout\Writer\Exception\WriterNotOpenedException
-     */
     public function write($row)
     {
 
@@ -84,10 +57,6 @@ class _XlsxWriter
 
     }
 
-    /**
-     * 关闭
-     * @return void
-     */
     public function close()
     {
 

@@ -5,10 +5,6 @@ namespace Junyang7\PhpCommon;
 class _Uuid
 {
 
-    /**
-     * 获取UUID
-     * @return string
-     */
     public static function get()
     {
 
@@ -24,5 +20,5 @@ class _Uuid
         );
 
     }
-
+    
 }

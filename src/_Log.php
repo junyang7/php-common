@@ -5,8 +5,6 @@ namespace Junyang7\PhpCommon;
 class _Log
 {
 
-    public static $path = "";
-
     public static function shutdown(...$message)
     {
 
@@ -35,10 +33,10 @@ class _Log
 
     }
 
-    public static function response(...$message)
+    public static function success(...$message)
     {
 
-        self::write("response", $message);
+        self::write("success", $message);
 
     }
 
@@ -66,21 +64,34 @@ class _Log
     public static function write($name, $message)
     {
 
-        if (!empty(self::$path)) {
-            $path = self::$path;
-        } else if (defined("LOG_PATH") && !empty(LOG_PATH)) {
-            $path = self::$path;
-        } else {
+        if (!C("log.enable", false)) {
             return;
         }
-
-        $row = [];
-        $row["guid"] = _Uuid::get();
-        $row["content"] = $message;
-        $content = _Datetime::get() . "\t" . _Json::encode($row) . "\n";
-
+        if (empty($path = C("log.path", ""))) {
+            return;
+        }
+        $content = _Datetime::get() . "\t" . _Json::encode($message) . "\n";
         $filename = $path . "/" . $name . "." . _Date::getByFormat("Ymd");
-        _File::write($filename, $content);
+        if (!file_exists($path)) {
+            try {
+                _Cmd::do(sprintf("mkdir -p %s", $path));
+            } catch (\Exception $exception) {
+                try {
+                    file_put_contents("default.log", $exception->getMessage() . "\n", FILE_APPEND);
+                    file_put_contents("default.log", $content, FILE_APPEND);
+                } catch (\Exception $exception) {
+                    return;
+                }
+            }
+        }
+        if (!is_dir($path)) {
+            return;
+        }
+        try {
+            file_put_contents($filename, $content, FILE_APPEND);
+        } catch (\Exception $exception) {
+            return;
+        }
 
     }
 

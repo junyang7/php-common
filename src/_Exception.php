@@ -11,7 +11,6 @@ class _Exception extends \Exception
     {
 
         parent::__construct();
-
         $this->code = $code;
         $this->message = $message;
         $this->data = $data;

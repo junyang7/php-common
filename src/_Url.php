@@ -9,19 +9,15 @@ class _Url
     {
 
         $res = $protocol . "://" . $domain;
-
         if (!($port == 0 || 80 == $port && "http" == $protocol || 443 == $port && "https" == $protocol)) {
             $res .= ":" . $port;
         }
-
         if (!empty($uri)) {
             $res .= "/" . trim($uri, "/");
         }
-
         if (!empty($parameter)) {
             $res .= "?" . http_build_query($parameter);
         }
-
         return $res;
 
     }

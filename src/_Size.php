@@ -9,22 +9,13 @@ class _Size
     private const UNIT = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", "BB", "NB", "DB", "CB",];
     private const UNIT_MAX_INDEX = 12;
 
-    /**
-     * 计算字节大小
-     * @param $size
-     * @param $precision
-     * @return string
-     * @throws \Exception
-     */
     public static function get($size, $precision = 4)
     {
 
         $i = floor(log($size, self::BASE));
-
         if ($i > self::UNIT_MAX_INDEX) {
             throw new \Exception("超出最大计量单位");
         }
-
         return round($size / pow(self::BASE, $i), $precision) . self::UNIT[$i];
 
     }

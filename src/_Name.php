@@ -5,6 +5,10 @@ namespace Junyang7\PhpCommon;
 class _Name
 {
 
+    /**abcAbcAbc->AbcAbcAbc
+     * @param $name
+     * @return string
+     */
     public static function lowCamelCaseToUpperCamelCase($name)
     {
 
@@ -14,6 +18,10 @@ class _Name
 
     }
 
+    /**abcAbcAbc->abc_abc_abc
+     * @param $name
+     * @return string
+     */
     public static function lowCamelCaseToUnderline($name)
     {
 
@@ -21,6 +29,10 @@ class _Name
 
     }
 
+    /**AbcAbcAbc->abcAbcAbc
+     * @param $name
+     * @return string
+     */
     public static function upperCamelCaseToLowCamelCase($name)
     {
 
@@ -30,6 +42,10 @@ class _Name
 
     }
 
+    /**AbcAbcAbc->abc_abc_abc
+     * @param $name
+     * @return string
+     */
     public static function upperCamelCaseToUnderline($name)
     {
 
@@ -37,6 +53,10 @@ class _Name
 
     }
 
+    /**abc_abc_abc->abcAbcAbc
+     * @param $name
+     * @return string
+     */
     public static function underlineToLowCamelCase($name)
     {
 
@@ -46,6 +66,10 @@ class _Name
 
     }
 
+    /**abc_abc_abc->AbcAbcAbc
+     * @param $name
+     * @return string
+     */
     public static function underlineToUpperCamelCase($name)
     {
 

@@ -9,7 +9,6 @@ class _Ip
     {
 
         $ip = "";
-
         if (isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && "127.0.0.1" != $_SERVER['"HTTP_X_FORWARDED_FOR']) {
             $ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
             $pos = strpos($ip, ",");
@@ -21,7 +20,6 @@ class _Ip
         } elseif (isset($_SERVER["REMOTE_ADDR"])) {
             $ip = $_SERVER["REMOTE_ADDR"];
         }
-
         if ("" != $ip) {
             $pos = strpos($ip, ":");
             if ($pos > 0) {
@@ -31,7 +29,6 @@ class _Ip
         } else {
             $ip = "127.0.0.1";
         }
-
         return $ip;
 
     }

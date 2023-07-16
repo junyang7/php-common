@@ -5,12 +5,6 @@ namespace Junyang7\PhpCommon;
 class _String
 {
 
-    /**
-     * 字符串是否以xxx开头
-     * @param $string string 字符串
-     * @param $prefix string xxx
-     * @return bool
-     */
     public static function hasPrefix($string, $prefix)
     {
 
@@ -18,12 +12,6 @@ class _String
 
     }
 
-    /**
-     * 字符串是否以xxx结尾
-     * @param $string string 字符串
-     * @param $suffix string xxx
-     * @return bool
-     */
     public static function hasSuffix($string, $suffix)
     {
 

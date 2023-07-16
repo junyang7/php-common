@@ -5,21 +5,13 @@ namespace Junyang7\PhpCommon;
 class _Quarter
 {
 
-    /**
-     * 获取季度
-     * @param $timestamp int 时间戳
-     * @return int
-     * @throws \Exception
-     */
     public static function getByTimestamp($timestamp)
     {
 
         $m = @date("m", $timestamp);
-
         if (false === $m) {
             throw new \Exception("date格式化操作失败");
         }
-
         switch ($m) {
             case 1:
             case 2:
@@ -43,11 +35,6 @@ class _Quarter
 
     }
 
-    /**
-     * 获取季度
-     * @return int
-     * @throws \Exception
-     */
     public static function get()
     {
 

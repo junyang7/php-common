@@ -5,82 +5,26 @@ namespace Junyang7\PhpCommon;
 class _Redis
 {
 
-    private static $redis_list = [];
-    private $uk = "";
-    private $machine = [];
-    private $master = false;
-    private $cluster = [];
-    private $index = 0;
-    private $retry = 3;
-
-    private function do($command, $parameter)
-    {
-
-        while ($this->retry > 0) {
-            $this->retry--;
-            try {
-                $res = @$this->redisDo($command, $parameter);
-                if (false === $res) {
-                    throw new \Exception(sprintf("命令执行异常|%s|%s", $command, _Json::encode($parameter)));
-                }
-                return $res;
-            } catch (\Exception $exception) {
-                if ($this->redisDo("ping", ["+PONG",])) {
-                    throw $exception;
-                }
-                unset(self::$redis_list[$this->uk]);
-                self::$redis_list[$this->uk] = null;
-            }
-        }
-        throw $exception;
-
-    }
-
-    private function redisDo($command, $parameter)
-    {
-
-        return $this->getRedis()->$command(...$parameter);
-
-    }
-
-    private function getRedis()
-    {
-
-        if (empty($this->uk)) {
-            if (empty($this->machine)) {
-                if (empty($this->cluster)) {
-                    throw new \Exception("请配置库链接信息");
-                }
-                $cluster = $this->cluster["cluster"][$this->index];
-                $master = $cluster["master"];
-                $slaver = $cluster["slaver"];
-                $this->machine = $this->master ? $master["machine"][0] : ($slaver["machine"][$slaver["count"] > 1 ? rand(0, $slaver["count"] - 1) : 0]);
-            }
-            $this->uk = md5(serialize($this->machine));
-        }
-        if (!isset(self::$redis_list[$this->uk])) {
-            $redis = new \Redis();
-            $redis->connect(
-                $this->machine["host"],
-                $this->machine["port"],
-                $this->machine["timeout"],
-                $this->machine["persistent_id"],
-                $this->machine["retry_interval"],
-                $this->machine["read_timeout"]
-            );
-            if (!empty($this->machine["password"])) {
-                $redis->auth($this->machine["password"]);
-            }
-            self::$redis_list[$this->uk] = $redis;
-        }
-        return self::$redis_list[$this->uk];
-
-    }
-
     public function machine($machine)
     {
 
         $this->machine = $machine;
+        return $this;
+
+    }
+
+    public function cmd($cmd)
+    {
+
+        $this->cmd = $cmd;
+        return $this;
+
+    }
+
+    public function parameter($parameter)
+    {
+
+        $this->parameter = $parameter;
         return $this;
 
     }
@@ -93,34 +37,102 @@ class _Redis
 
     }
 
-    public function cluster($cluster)
+    public function query()
     {
 
-        $this->cluster = $cluster;
+        return $this->do();
+
+    }
+
+    public function execute()
+    {
+
+        $this->master(true);
+        return $this->do();
+
+    }
+
+    private $machine = [];
+    private $cmd = "";
+    private $parameter = [];
+    private $master = false;
+    private $uk = "";
+    private static $redis_map = [];
+
+    private function getMachine()
+    {
+
+        return $this->machine;
+
+    }
+
+    private function getCmd()
+    {
+
+        return $this->cmd;
+
+    }
+
+    private function getParameter()
+    {
+
+        return $this->parameter;
+
+    }
+
+    private function getMaster()
+    {
+
+        return $this->master;
+
+    }
+
+    private function getInstance()
+    {
+
         return $this;
 
     }
 
-    public function index($index)
+    private function getRedis()
     {
 
-        $this->index = $index;
-        return $this;
+        if (empty($this->uk)) {
+            $this->uk = md5(serialize($this->machine));
+        }
+        if (!isset(self::$redis_map[$this->uk])) {
+            self::$redis_map[$this->uk] = new \Redis();
+            if (false === self::$redis_map[$this->uk]->connect($this->machine["host"], $this->machine["port"], $this->machine["timeout"], $this->machine["persistent_id"], $this->machine["retry_interval"], $this->machine["read_timeout"])) {
+                throw new \Exception("Redis连接失败");
+            }
+            if (!empty($this->machine["password"])) {
+                if (false === self::$redis_map[$this->uk]->auth($this->machine["password"])) {
+                    throw new \Exception("Redis认证失败");
+                }
+            }
+        }
+        return self::$redis_map[$this->uk];
 
     }
 
-    public function query($command, $parameter = [])
+    private function do()
     {
 
-        return $this->do($command, $parameter);
-
-    }
-
-    public function execute($command, $parameter = [])
-    {
-
-        $this->master = true;
-        return $this->do($command, $parameter);
+        $i = 2;
+        while ($i > 0) {
+            $i--;
+            try {
+                return $this->getInstance()->getRedis()->rawCommand($this->cmd, ...$this->parameter);
+            } catch (\Exception $exception) {
+                try {
+                    $this->getInstance()->getRedis()->ping();
+                } catch (\Exception $exception) {
+                    unset(self::$redis_map[$this->uk]);
+                    self::$redis_map[$this->uk] = null;
+                }
+            }
+        }
+        throw $exception;
 
     }
 

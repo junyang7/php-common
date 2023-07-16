@@ -26,16 +26,10 @@ class _Curl
     public $proxy_port = 0;
     public $ca_info = "";
 
-    /**
-     * 发起http请求
-     * @return array
-     * @throws \Exception
-     */
     public function request()
     {
 
         $ch = curl_init();
-
         curl_setopt($ch, CURLINFO_HEADER_OUT, $this->header_out);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $this->follow_location);
         curl_setopt($ch, CURLOPT_NOSIGNAL, $this->no_signal);
@@ -56,21 +50,17 @@ class _Curl
         curl_setopt($ch, CURLOPT_CAINFO, $this->ca_info);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->verify_peer);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->ssl_verify_host);
-
         $data = curl_exec($ch);
         $errno = curl_errno($ch);
         $error = curl_error($ch);
         $info = curl_getinfo($ch);
         curl_close($ch);
-
         if (0 != $errno) {
             throw new \Exception(sprintf("Curl执行异常|%s|%s", $errno, $error));
         }
-
         $res = [];
         $res["data"] = $data;
         $res["info"] = $info;
-
         return $res;
 
     }

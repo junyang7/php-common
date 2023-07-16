@@ -17,18 +17,10 @@ class _CsvReader
 
     }
 
-    /**
-     * 打开
-     * @param $file string 路径
-     * @return void
-     * @throws \Box\Spout\Common\Exception\IOException
-     * @throws \Box\Spout\Reader\Exception\ReaderNotOpenedException
-     */
     public function open($file)
     {
 
         $this->reader->open($file);
-
         foreach ($this->reader->getSheetIterator() as $sheet) {
             $this->sheet = $sheet;
             return;
@@ -36,10 +28,6 @@ class _CsvReader
 
     }
 
-    /**
-     * 读取
-     * @return \Generator
-     */
     public function read()
     {
 
@@ -49,10 +37,6 @@ class _CsvReader
 
     }
 
-    /**
-     * 关闭
-     * @return void
-     */
     public function close()
     {
 
