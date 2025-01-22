@@ -1,0 +1,20 @@
+{
+  "minimum-stability": "dev",
+  "name": "junyang7/php-common",
+  "autoload": {
+    "psr-4": {
+      "Junyang7\\PhpCommon\\": "src"
+    }
+  },
+  "require": {
+    "php": ">=7.4",
+    "box/spout": "dev-master",
+    "phpmailer/phpmailer": "dev-master",
+    "ext-openssl": "*",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-redis": "*",
+    "ext-zlib": "*"
+  }
+}
